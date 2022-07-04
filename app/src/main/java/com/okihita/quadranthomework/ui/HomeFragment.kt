@@ -11,7 +11,7 @@ import dagger.hilt.android.AndroidEntryPoint
 @AndroidEntryPoint
 class HomeFragment : Fragment(R.layout.fragment_home) {
 
-    private val coinDeskViewModel by viewModels<CoinDeskViewModel>()
+    private val coinDeskVM by viewModels<CoinDeskViewModel>()
 
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
@@ -20,11 +20,15 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
         super.onViewCreated(view, savedInstanceState)
         _binding = FragmentHomeBinding.bind(view)
 
-        coinDeskViewModel.priceIndexResponse.observe(viewLifecycleOwner) {
-            binding.tv.text = it.disclaimer
+        coinDeskVM.priceIndexResponse.observe(viewLifecycleOwner) {
+            binding.tvHello.text = it.disclaimer
         }
 
-        coinDeskViewModel.callCoinDeskApi()
+        coinDeskVM.roomItemResponse.observe(viewLifecycleOwner) {
+            binding.tvUSD.text = it
+        }
+
+        coinDeskVM.callCoinDeskApi()
     }
 
     override fun onDestroyView() {
