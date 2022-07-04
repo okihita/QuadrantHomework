@@ -7,14 +7,14 @@ import androidx.lifecycle.viewModelScope
 import com.okihita.quadranthomework.data.entities.PriceIndexResponse
 import com.okihita.quadranthomework.data.local.PriceIndexDatabase
 import com.okihita.quadranthomework.data.remote.CoinDeskApi
+import com.okihita.quadranthomework.data.repository.CoinDeskRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class CoinDeskViewModel @Inject constructor(
-    private val coinDeskApi: CoinDeskApi,
-    private val priceIndexDatabase: PriceIndexDatabase
+    private val repository: CoinDeskRepository
 ) : ViewModel() {
 
     private val _priceIndexResponse = MutableLiveData<PriceIndexResponse>()
@@ -27,11 +27,11 @@ class CoinDeskViewModel @Inject constructor(
         viewModelScope.launch {
             try {
 
-                val priceIndexResponse = coinDeskApi.getCurrentPrice()
+                val priceIndexResponse = repository.callCoinDeskApi()
                 _priceIndexResponse.value = priceIndexResponse
-                priceIndexDatabase.priceIndexDao().addPriceIndex(priceIndexResponse)
 
-                val roomItem = priceIndexDatabase.priceIndexDao().getAllPriceIndices().first()
+                repository.insertPriceIndexResponse(priceIndexResponse)
+                val roomItem = repository.getAllPriceIndexResponse().first()
                 _roomItemResponse.value = roomItem.bpi["USD"]?.rate ?: "No rate available"
 
             } catch (e: Exception) {

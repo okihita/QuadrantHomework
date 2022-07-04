@@ -9,7 +9,7 @@ import com.okihita.quadranthomework.data.entities.PriceIndexResponse
 interface PriceIndexDao {
 
     @Insert
-    suspend fun addPriceIndex(priceIndexResponse: PriceIndexResponse)
+    suspend fun addPriceIndexResponse(priceIndexResponse: PriceIndexResponse)
 
     @Query("SELECT * FROM price_index")
     suspend fun getAllPriceIndices(): List<PriceIndexResponse>
