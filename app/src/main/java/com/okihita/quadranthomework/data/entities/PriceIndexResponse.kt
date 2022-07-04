@@ -1,6 +1,6 @@
 package com.okihita.quadranthomework.data.entities
 
-data class CoinDeskResponse(
+data class PriceIndexResponse(
     val time: CoinDeskTime,
     val disclaimer: String,
     val chartName: String,

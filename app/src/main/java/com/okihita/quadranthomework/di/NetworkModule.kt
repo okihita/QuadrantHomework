@@ -1,4 +1,4 @@
-package com.okihita.quadranthomework.data.di
+package com.okihita.quadranthomework.di
 
 import com.okihita.quadranthomework.data.remote.CoinDeskApi
 import com.okihita.quadranthomework.utils.Constants
