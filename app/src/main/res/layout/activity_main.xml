@@ -6,9 +6,10 @@
     tools:context=".ui.MainActivity">
 
     <TextView
+        android:id="@+id/tv"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:gravity="center"
-        tools:text="Hello World!" />
+        android:text="Hello World!" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
