@@ -32,6 +32,9 @@ class CoinDeskViewModel @Inject constructor(
     init {
         resetWork()
         loadDatabaseContent()
+
+        // Check current device date, in UTC timezone.
+        // Only show snapshots that are the same with today's date.
     }
 
     private fun loadDatabaseContent() {
