@@ -16,4 +16,6 @@ class CoinDeskRepository @Inject constructor(
         database.priceIndexDao().addPriceIndexResponse(priceIndexResponse)
 
     suspend fun getAllPriceIndexResponse() = database.priceIndexDao().getAllPriceIndices()
+
+    suspend fun cleanDatabase() = database.priceIndexDao().deleteAll()
 }

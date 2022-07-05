@@ -1,42 +1,65 @@
 package com.okihita.quadranthomework.ui
 
+import android.content.Context
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.work.*
 import com.okihita.quadranthomework.data.entities.PriceIndexResponse
-import com.okihita.quadranthomework.data.local.PriceIndexDatabase
-import com.okihita.quadranthomework.data.remote.CoinDeskApi
 import com.okihita.quadranthomework.data.repository.CoinDeskRepository
+import com.okihita.quadranthomework.workers.CoinDeskUpdaterWorker
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.launch
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 @HiltViewModel
 class CoinDeskViewModel @Inject constructor(
+    @ApplicationContext context: Context,
     private val repository: CoinDeskRepository
 ) : ViewModel() {
 
+    private val workManager = WorkManager.getInstance(context)
+
     private val _priceIndexResponse = MutableLiveData<PriceIndexResponse>()
-    val priceIndexResponse: LiveData<PriceIndexResponse> = _priceIndexResponse
+    val latestPriceIndex: LiveData<PriceIndexResponse> = _priceIndexResponse
 
-    private val _roomItemResponse = MutableLiveData<String>()
-    val roomItemResponse = _roomItemResponse
+    private val _dbItems = MutableLiveData<List<PriceIndexResponse>>()
+    val dbItems = _dbItems
 
-    fun callCoinDeskApi() {
+    init {
+        resetWork()
+        loadDatabaseContent()
+    }
+
+    private fun loadDatabaseContent() {
         viewModelScope.launch {
             try {
+                val databaseItems = repository.getAllPriceIndexResponse()
+                _dbItems.value = databaseItems
 
-                val priceIndexResponse = repository.callCoinDeskApi()
-                _priceIndexResponse.value = priceIndexResponse
-
-                repository.insertPriceIndexResponse(priceIndexResponse)
-                val roomItem = repository.getAllPriceIndexResponse().first()
-                _roomItemResponse.value = roomItem.bpi["USD"]?.rate ?: "No rate available"
-
-            } catch (e: Exception) {
-                e.printStackTrace() // Network error or server error
+                _priceIndexResponse.value = databaseItems.first()
+            } catch (exception: Exception) {
+                exception.printStackTrace()
             }
         }
+    }
+
+    private fun resetWork() {
+        val constraints = Constraints.Builder()
+            .setRequiredNetworkType(NetworkType.UNMETERED)
+            .setRequiresBatteryNotLow(true)
+            .build()
+
+        val work = PeriodicWorkRequestBuilder<CoinDeskUpdaterWorker>(15, TimeUnit.MINUTES)
+            .build()
+
+        workManager.enqueueUniquePeriodicWork(
+            CoinDeskUpdaterWorker.WORK_NAME,
+            ExistingPeriodicWorkPolicy.REPLACE,
+            work
+        )
     }
 }

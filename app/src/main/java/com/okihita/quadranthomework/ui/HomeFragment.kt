@@ -20,15 +20,21 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
         super.onViewCreated(view, savedInstanceState)
         _binding = FragmentHomeBinding.bind(view)
 
-        coinDeskVM.priceIndexResponse.observe(viewLifecycleOwner) {
-            binding.tvHello.text = it.disclaimer
+        coinDeskVM.latestPriceIndex.observe(viewLifecycleOwner) { latestPriceIndex ->
+
+            binding.tvHello.text = "Latest price for USD:\n" +
+                    latestPriceIndex.bpi["USD"]?.rate
         }
 
-        coinDeskVM.roomItemResponse.observe(viewLifecycleOwner) {
-            binding.tvUSD.text = it
-        }
+        coinDeskVM.dbItems.observe(viewLifecycleOwner) { savedItems ->
 
-        coinDeskVM.callCoinDeskApi()
+            var suffix = ""
+            savedItems.forEach { priceIndexResponse ->
+                suffix += "${priceIndexResponse.bpi["USD"]?.rate}\n"
+            }
+
+            binding.tvUSD.text = "There are ${savedItems.size} items in the database:\n" + suffix
+        }
     }
 
     override fun onDestroyView() {
