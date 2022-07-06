@@ -1,19 +1,18 @@
 package com.okihita.quadranthomework.data.local
 
 import androidx.room.Dao
-import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.Query
-import com.okihita.quadranthomework.data.entities.PriceIndexResponse
+import com.okihita.quadranthomework.data.entities.PriceIndex
 
 @Dao
 interface PriceIndexDao {
 
     @Insert
-    suspend fun addPriceIndexResponse(priceIndexResponse: PriceIndexResponse)
+    suspend fun addPriceIndexResponse(priceIndex: PriceIndex)
 
     @Query("SELECT * FROM price_index")
-    suspend fun getAllPriceIndices(): List<PriceIndexResponse>
+    suspend fun getAllPriceIndices(): List<PriceIndex>
 
     @Query("DELETE FROM price_index")
     suspend fun deleteAll()

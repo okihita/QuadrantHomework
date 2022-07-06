@@ -4,6 +4,9 @@
     package="com.okihita.quadranthomework">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
 
     <application
         android:name=".QuadrantHomeworkApplication"
@@ -16,6 +19,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.QuadrantHomework"
         tools:targetApi="31">
+
         <activity
             android:name=".ui.MainActivity"
             android:exported="true">

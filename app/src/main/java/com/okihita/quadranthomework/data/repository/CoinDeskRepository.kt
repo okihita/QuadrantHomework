@@ -1,6 +1,6 @@
 package com.okihita.quadranthomework.data.repository
 
-import com.okihita.quadranthomework.data.entities.PriceIndexResponse
+import com.okihita.quadranthomework.data.entities.PriceIndex
 import com.okihita.quadranthomework.data.local.PriceIndexDatabase
 import com.okihita.quadranthomework.data.remote.CoinDeskApi
 import javax.inject.Inject
@@ -12,10 +12,11 @@ class CoinDeskRepository @Inject constructor(
 
     suspend fun callCoinDeskApi() = api.getCurrentPrice()
 
-    suspend fun insertPriceIndexResponse(priceIndexResponse: PriceIndexResponse) =
-        database.priceIndexDao().addPriceIndexResponse(priceIndexResponse)
+    suspend fun insertPriceIndexResponse(priceIndex: PriceIndex) =
+        database.priceIndexDao().addPriceIndexResponse(priceIndex)
 
     suspend fun getAllPriceIndexResponse() = database.priceIndexDao().getAllPriceIndices()
 
-    suspend fun cleanDatabase() = database.priceIndexDao().deleteAll()
+    suspend fun getLatestCacheItem() = database.priceIndexDao().getAllPriceIndices().last()
+
 }
