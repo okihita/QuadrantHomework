@@ -18,7 +18,11 @@ data class PriceIndex(
     val time: CoinDeskTime,
 
     @TypeConverters(PriceIndexMapConverter::class)
-    val bpi: Map<String, BitcoinPriceIndex>
+    val bpi: Map<String, BitcoinPriceIndex>,
+
+    @Embedded
+    var location: DeviceLocation?
+
 ) {
 
     data class CoinDeskTime(
@@ -31,6 +35,12 @@ data class PriceIndex(
         val rate: String,
         val description: String,
         val rate_float: Float
+    )
+
+    data class DeviceLocation(
+        var latitude: Double? = 0.0,
+        var longitude: Double? = 0.0,
+        var address: String? = ""
     )
 }
 

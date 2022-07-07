@@ -4,6 +4,7 @@ import android.content.pm.PackageManager
 import android.graphics.Color
 import android.os.Bundle
 import android.view.View
+import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
@@ -66,13 +67,12 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
 
         // Check for permissions
         when {
-
             // If all permissions are granted, then call start the work
             requiredPermissionsList.all {
                 ContextCompat.checkSelfPermission(requireContext(), it) ==
                         PackageManager.PERMISSION_GRANTED
             } -> {
-                coinDeskVM.resetBackgroundWork()
+                coinDeskVM.startPriceLocationUpdateWork()
             }
 
             else -> {
@@ -85,9 +85,10 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
     private val requestPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissionStatusMap ->
             if (permissionStatusMap.all { it.value }) { // If all permissions are granted
-                coinDeskVM.resetBackgroundWork()
+                coinDeskVM.startPriceLocationUpdateWork()
             } else {
                 // TODO: Handle permission denied here
+                Toast.makeText(activity, "Permission denied", Toast.LENGTH_SHORT).show()
             }
         }
 

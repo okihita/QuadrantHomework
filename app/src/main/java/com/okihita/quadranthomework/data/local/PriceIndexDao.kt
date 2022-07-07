@@ -9,10 +9,17 @@ import com.okihita.quadranthomework.data.entities.PriceIndex
 interface PriceIndexDao {
 
     @Insert
-    suspend fun addPriceIndexResponse(priceIndex: PriceIndex)
+    suspend fun addPriceIndexResponse(priceIndex: PriceIndex): Long // Returns row id if success
 
     @Query("SELECT * FROM price_index")
     suspend fun getAllPriceIndices(): List<PriceIndex>
+
+    @Query(
+        "SELECT * FROM price_index " +
+                "ORDER BY id DESC " +
+                "LIMIT 1"
+    )
+    suspend fun getNewestPriceIndex(): PriceIndex
 
     @Query("DELETE FROM price_index")
     suspend fun deleteAll()

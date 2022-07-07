@@ -18,9 +18,7 @@ object DatabaseModule {
     @Singleton
     fun providePriceIndexDatabase(
         @ApplicationContext context: Context
-    ) = Room.databaseBuilder(
-        context,
-        PriceIndexDatabase::class.java,
-        "price_index_db"
-    ).build()
+    ) = Room.databaseBuilder(context, PriceIndexDatabase::class.java, "price_index_db")
+        .fallbackToDestructiveMigration() // Clear database content when schema changes
+        .build()
 }

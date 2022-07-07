@@ -10,13 +10,15 @@ class CoinDeskRepository @Inject constructor(
     private val database: PriceIndexDatabase
 ) {
 
-    suspend fun callCoinDeskApi() = api.getCurrentPrice()
+    suspend fun callCoinDeskApi() =
+        api.getCurrentPrice()
 
-    suspend fun insertPriceIndexResponse(priceIndex: PriceIndex) =
+    suspend fun insertPriceIndex(priceIndex: PriceIndex) =
         database.priceIndexDao().addPriceIndexResponse(priceIndex)
 
-    suspend fun getAllPriceIndexResponse() = database.priceIndexDao().getAllPriceIndices()
+    suspend fun getAllPriceIndices() =
+        database.priceIndexDao().getAllPriceIndices()
 
-    suspend fun getLatestCacheItem() = database.priceIndexDao().getAllPriceIndices().last()
-
+    suspend fun getNewestPriceIndex() =
+        database.priceIndexDao().getNewestPriceIndex()
 }
