@@ -1,8 +1,11 @@
 package com.okihita.quadranthomework.ui
 
+import android.content.pm.PackageManager
 import android.graphics.Color
 import android.os.Bundle
 import android.view.View
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.work.WorkInfo
@@ -27,6 +30,12 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
     private var isWorkerRunning = false // To avoid unnecessary initial call of reloadCache()
 
     private val chartEntries: MutableList<Entry> = mutableListOf()
+
+    private val requiredPermissionsList = arrayOf(
+        android.Manifest.permission.ACCESS_COARSE_LOCATION,
+        android.Manifest.permission.ACCESS_FINE_LOCATION,
+        android.Manifest.permission.ACCESS_BACKGROUND_LOCATION,
+    )
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
 
@@ -54,7 +63,33 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
                 }
             }
         }
+
+        // Check for permissions
+        when {
+
+            // If all permissions are granted, then call start the work
+            requiredPermissionsList.all {
+                ContextCompat.checkSelfPermission(requireContext(), it) ==
+                        PackageManager.PERMISSION_GRANTED
+            } -> {
+                coinDeskVM.resetBackgroundWork()
+            }
+
+            else -> {
+                requestPermissionLauncher.launch(requiredPermissionsList)
+            }
+        }
     }
+
+    // https://developer.android.com/training/permissions/requesting
+    private val requestPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissionStatusMap ->
+            if (permissionStatusMap.all { it.value }) { // If all permissions are granted
+                coinDeskVM.resetBackgroundWork()
+            } else {
+                // TODO: Handle permission denied here
+            }
+        }
 
     private fun redrawChart(cachedItems: List<PriceIndex>) {
         cachedItems.forEach { priceIndex ->

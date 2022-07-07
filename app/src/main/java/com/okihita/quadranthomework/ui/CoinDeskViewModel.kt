@@ -6,17 +6,17 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.work.ExistingPeriodicWorkPolicy
-import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkContinuation
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import com.okihita.quadranthomework.data.entities.PriceIndex
 import com.okihita.quadranthomework.data.repository.CoinDeskRepository
 import com.okihita.quadranthomework.workers.CoinDeskUpdaterWorker
+import com.okihita.quadranthomework.workers.LocationUpdateWorker
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.launch
-import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 @HiltViewModel
@@ -31,10 +31,27 @@ class CoinDeskViewModel @Inject constructor(
     private val _cacheItems = MutableLiveData<List<PriceIndex>>()
     val cacheItems = _cacheItems
 
+    private lateinit var continuation: WorkContinuation
+
     init {
         Log.d("Xena", "vm init: ")
         reloadCache()
-        resetBackgroundWork()
+        initializeWork()
+    }
+
+    private fun initializeWork() {
+
+        val fetchRemotePriceRequest =
+            OneTimeWorkRequestBuilder<CoinDeskUpdaterWorker>().build()
+
+        val getLocationUpdateRequest =
+            OneTimeWorkRequestBuilder<LocationUpdateWorker>().build()
+
+        continuation = workManager
+            .beginWith(fetchRemotePriceRequest)
+            .then(getLocationUpdateRequest)
+
+        workInfo = workManager.getWorkInfoByIdLiveData(fetchRemotePriceRequest.id)
     }
 
     fun reloadCache() {
@@ -49,17 +66,8 @@ class CoinDeskViewModel @Inject constructor(
         }
     }
 
-    private fun resetBackgroundWork() {
+    fun resetBackgroundWork() {
         Log.d("Xena", "resetBackgroundWork: ")
-        val work = PeriodicWorkRequestBuilder<CoinDeskUpdaterWorker>(15, TimeUnit.MINUTES)
-            .build()
-
-        workManager.enqueueUniquePeriodicWork(
-            CoinDeskUpdaterWorker.WORK_NAME,
-            ExistingPeriodicWorkPolicy.REPLACE,
-            work
-        )
-
-        workInfo = workManager.getWorkInfoByIdLiveData(work.id)
+        continuation.enqueue()
     }
 }
