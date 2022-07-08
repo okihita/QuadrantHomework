@@ -20,7 +20,7 @@
             tools:text="Time" />
 
         <TextView
-            android:id="@+id/tvCurrency"
+            android:id="@+id/tvCurrencyAndRate"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             app:layout_constraintStart_toStartOf="parent"
@@ -28,19 +28,11 @@
             tools:text="Currency" />
 
         <TextView
-            android:id="@+id/tvRate"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tvCurrency"
-            tools:text="0.0" />
-
-        <TextView
             android:id="@+id/tvLatLong"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tvRate"
+            app:layout_constraintTop_toBottomOf="@id/tvCurrencyAndRate"
             tools:text="Lat Lng" />
 
         <TextView

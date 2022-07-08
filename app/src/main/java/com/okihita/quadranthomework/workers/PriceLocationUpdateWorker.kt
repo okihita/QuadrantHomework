@@ -16,8 +16,9 @@ import androidx.work.WorkerParameters
 import com.google.android.gms.location.*
 import com.google.android.gms.tasks.Task
 import com.okihita.quadranthomework.data.entities.PriceIndex
-import com.okihita.quadranthomework.data.entities.getDateTime
+import com.okihita.quadranthomework.data.entities.getISOZonedDateTime
 import com.okihita.quadranthomework.data.repository.CoinDeskRepository
+import com.okihita.quadranthomework.utils.toDateString
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import java.util.*
@@ -53,7 +54,7 @@ class PriceLocationUpdateWorker @AssistedInject constructor(
             val deviceLocation = PriceIndex.DeviceLocation(
                 lastLocation?.latitude ?: 0.0,
                 lastLocation?.longitude ?: 0.0,
-                lastLocation?.getCompleteAddressString() ?: "Location not found"
+                lastLocation?.getCompleteAddressString() ?: "Address not found"
             )
 
 
@@ -70,13 +71,26 @@ class PriceLocationUpdateWorker @AssistedInject constructor(
 
             // If the database contains data from the same hour, don't save the response
             else {
-                val lastCacheDateTime = repository.getNewestPriceIndex().getDateTime()
+                val lastCacheDateTime = repository.getNewestPriceIndex().getISOZonedDateTime()
+                Log.d("Xena", "doWork: last cache: " + lastCacheDateTime.toDateString())
 
-                if (response.getDateTime().dayOfYear == lastCacheDateTime.dayOfYear) {
-                    if (response.getDateTime().hour != lastCacheDateTime.hour) {
+                // If the response's date is the same with the date, check if it's the same hour
+                if (response.getISOZonedDateTime().dayOfYear == lastCacheDateTime.dayOfYear) {
+                    if (response.getISOZonedDateTime().hour != lastCacheDateTime.hour) {
+                        Log.d("Xena", "doWork: not same hour, inserting item")
                         repository.insertPriceIndex(response)
                         showNotification(response)
+                    } else {
+                        Log.d("Xena", "doWork: do nothing with data from same hour")
+                        // Do nothing with the data from same hour
                     }
+                }
+
+                // If the response belongs to a new/different day
+                else {
+                    Log.d("Xena", "doWork: response from a new day compared to last item")
+                    repository.insertPriceIndex(response)
+                    showNotification(response)
                 }
             }
 

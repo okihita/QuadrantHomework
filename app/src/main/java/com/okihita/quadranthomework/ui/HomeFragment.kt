@@ -20,8 +20,11 @@ import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
 import com.okihita.quadranthomework.R
 import com.okihita.quadranthomework.data.entities.PriceIndex
-import com.okihita.quadranthomework.data.entities.getDateTime
+import com.okihita.quadranthomework.data.entities.getISOZonedDateTime
 import com.okihita.quadranthomework.databinding.FragmentHomeBinding
+import com.okihita.quadranthomework.utils.fromDeviceToUtc
+import com.okihita.quadranthomework.utils.getCurrentDeviceZonedDateTime
+import com.okihita.quadranthomework.utils.toDateString
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -52,6 +55,8 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
 
         setupObservers()
 
+        binding.tvDate.text =
+            getCurrentDeviceZonedDateTime().fromDeviceToUtc().toDateString() + " (UTC)"
         setupPriceChart()
         setupButtons()
         setupRV()
@@ -87,7 +92,7 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
         binding.ivEUR.setOnClickListener { switchCurrency("EUR") }
 
         binding.btRefresh.setOnClickListener {
-            coinDeskVM.reloadFromDatabase()
+            coinDeskVM.reloadTodayItemsFromDatabase()
         }
     }
 
@@ -100,7 +105,6 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
         colorMatrix.setSaturation(0f)
         val grayscaleFilter = ColorMatrixColorFilter(colorMatrix)
 
-        Log.d("Xena", "switchCurrency: applying filters")
         binding.apply {
             ivUSD.colorFilter = grayscaleFilter
             ivGBP.colorFilter = grayscaleFilter
@@ -131,13 +135,14 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
         }
 
         coinDeskVM.workInfo.observe(viewLifecycleOwner) {
+            Log.d("Xena", "setupObservers: ${it.state}")
             // For PeriodicWorkRequest, State.ENQUEUED means either that the work is started for the
             // first time, or a work is finished and another future-work is now enqueued.
             if (it.state == WorkInfo.State.ENQUEUED) {
                 if (!isWorkerRunning) {
                     isWorkerRunning = true
                 } else {
-                    coinDeskVM.reloadFromDatabase()
+                    coinDeskVM.reloadTodayItemsFromDatabase()
                 }
             }
         }
@@ -159,7 +164,7 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
         chartEntries.clear()
 
         cachedItems.forEach { priceIndex ->
-            val hour = priceIndex.getDateTime().hour
+            val hour = priceIndex.getISOZonedDateTime().hour
             val rate = priceIndex.bpi[selectedCurrency]?.rate_float
 
             chartEntries.add(Entry(hour.toFloat(), rate ?: 0f))

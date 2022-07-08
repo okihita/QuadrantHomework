@@ -6,6 +6,8 @@ import androidx.room.PrimaryKey
 import androidx.room.TypeConverters
 import com.okihita.quadranthomework.data.local.PriceIndexMapConverter
 import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 
 @Entity(tableName = "price_index")
@@ -44,6 +46,8 @@ data class PriceIndex(
     )
 }
 
-fun PriceIndex.getDateTime(): LocalDateTime {
-    return LocalDateTime.parse(this.time.updatedISO, DateTimeFormatter.ISO_DATE_TIME)
+fun PriceIndex.getISOZonedDateTime(): ZonedDateTime {
+    val utcLocalDateTime =
+        LocalDateTime.parse(time.updatedISO, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+    return utcLocalDateTime.atZone(ZoneId.of("UTC"))
 }

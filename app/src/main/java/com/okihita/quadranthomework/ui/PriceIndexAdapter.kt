@@ -4,8 +4,10 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.okihita.quadranthomework.data.entities.PriceIndex
-import com.okihita.quadranthomework.data.entities.getDateTime
+import com.okihita.quadranthomework.data.entities.getISOZonedDateTime
 import com.okihita.quadranthomework.databinding.ItemPriceIndexInfoBinding
+import com.okihita.quadranthomework.utils.fromUtcToDevice
+import com.okihita.quadranthomework.utils.toDateString
 
 class PriceIndexAdapter : RecyclerView.Adapter<PriceIndexAdapter.PriceIndexVH>() {
 
@@ -26,13 +28,18 @@ class PriceIndexAdapter : RecyclerView.Adapter<PriceIndexAdapter.PriceIndexVH>()
         RecyclerView.ViewHolder(binding.root) {
 
         fun bind(priceIndex: PriceIndex) {
+
+            val priceIndexUtcTime = priceIndex.getISOZonedDateTime().toDateString("HH:mm")
+            val priceIndexDeviceTime = priceIndex.getISOZonedDateTime().fromUtcToDevice()
+                .toDateString("dd MMM, HH:mm")
+
             binding.apply {
-                tvTime.text = "${priceIndex.getDateTime().hour}:00 UTC"
-                tvCurrency.text = selectedCurrency
-                tvRate.text = priceIndex.bpi[selectedCurrency]?.rate
+                tvTime.text = "TIME: $priceIndexUtcTime ($priceIndexDeviceTime local time)"
+                tvCurrencyAndRate.text =
+                    "RATE: $selectedCurrency ${priceIndex.bpi[selectedCurrency]?.rate}"
                 tvLatLong.text =
-                    "${priceIndex.location?.latitude}, ${priceIndex.location?.longitude}"
-                tvAddress.text = "${priceIndex.location?.address}"
+                    "LOCATION: ${priceIndex.location?.latitude}, ${priceIndex.location?.longitude}"
+                tvAddress.text = "ADDRESS: ${priceIndex.location?.address}"
             }
         }
     }

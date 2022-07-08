@@ -6,12 +6,12 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.work.ExistingPeriodicWorkPolicy
-import androidx.work.PeriodicWorkRequestBuilder
-import androidx.work.WorkInfo
-import androidx.work.WorkManager
+import androidx.work.*
 import com.okihita.quadranthomework.data.entities.PriceIndex
+import com.okihita.quadranthomework.data.entities.getISOZonedDateTime
 import com.okihita.quadranthomework.data.repository.CoinDeskRepository
+import com.okihita.quadranthomework.utils.fromDeviceToUtc
+import com.okihita.quadranthomework.utils.getCurrentDeviceZonedDateTime
 import com.okihita.quadranthomework.utils.refresh
 import com.okihita.quadranthomework.workers.PriceLocationUpdateWorker
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -27,6 +27,7 @@ class CoinDeskViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val workManager = WorkManager.getInstance(context)
+    private lateinit var fetchPriceLocationRequest: PeriodicWorkRequest
     lateinit var workInfo: LiveData<WorkInfo>
 
     private val _cacheItems = MutableLiveData<List<PriceIndex>>()
@@ -34,31 +35,41 @@ class CoinDeskViewModel @Inject constructor(
 
     init {
         Log.d("Xena", "vm init: ")
-        reloadFromDatabase()
-        startPriceLocationUpdateWork()
+        reloadTodayItemsFromDatabase()
+        setupPriceLocationWork()
     }
 
-    fun startPriceLocationUpdateWork() {
-
-        val fetchPriceLocationRequest =
+    private fun setupPriceLocationWork() {
+        fetchPriceLocationRequest =
             PeriodicWorkRequestBuilder<PriceLocationUpdateWorker>(15, TimeUnit.MINUTES)
                 .build()
-
-        workManager.enqueueUniquePeriodicWork(
-            "QuadrantUpdatePriceLocation",
-            ExistingPeriodicWorkPolicy.KEEP,
-            fetchPriceLocationRequest
-        )
-
         workInfo = workManager.getWorkInfoByIdLiveData(fetchPriceLocationRequest.id)
     }
 
-    fun reloadFromDatabase() {
+    fun startPriceLocationUpdateWork() {
+        Log.d("Xena", "startPriceLocationUpdateWork: ")
+        workManager.enqueueUniquePeriodicWork(
+            "QuadrantUpdatePriceLocation",
+            ExistingPeriodicWorkPolicy.REPLACE,
+            fetchPriceLocationRequest
+        )
+    }
+
+    fun reloadTodayItemsFromDatabase() {
         Log.d("Xena", "reloadCache: ")
         viewModelScope.launch {
             try {
+
+                // Get all items from database
                 val databaseItems = repository.getAllPriceIndices()
-                _cacheItems.value = databaseItems
+
+                // Get only items for today (using UTC timezone)
+                val todayUtcDate = getCurrentDeviceZonedDateTime().fromDeviceToUtc().dayOfYear
+                val todayItems = databaseItems.filter {
+                    it.getISOZonedDateTime().dayOfYear == todayUtcDate
+                }
+
+                _cacheItems.value = todayItems
             } catch (exception: Exception) {
                 exception.printStackTrace()
             }
@@ -66,6 +77,7 @@ class CoinDeskViewModel @Inject constructor(
     }
 
     fun refreshCacheItems() {
+        Log.d("Xena", "refreshCacheItems: ")
         _cacheItems.refresh()
     }
 }

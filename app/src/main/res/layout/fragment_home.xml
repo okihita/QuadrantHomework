@@ -6,20 +6,42 @@
     android:layout_height="match_parent"
     tools:context=".ui.HomeFragment">
 
-    <com.github.mikephil.charting.charts.LineChart
-        android:id="@+id/chart"
+    <TextView
+        android:id="@+id/tvHeader"
         android:layout_width="match_parent"
-        android:layout_height="300dp"
-        android:layout_margin="8dp"
-        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_height="wrap_content"
+        android:paddingHorizontal="8dp"
+        android:paddingTop="8dp"
+        android:text="Bitcoin Price Index"
+        android:textSize="24sp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
+    <TextView
+        android:id="@+id/tvDate"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingHorizontal="8dp"
+        android:paddingBottom="8dp"
+        android:textSize="18sp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tvHeader"
+        tools:text="Tuesday, 7 July 2022" />
+
+    <com.github.mikephil.charting.charts.LineChart
+        android:id="@+id/chart"
+        android:layout_width="match_parent"
+        android:layout_height="250dp"
+        android:layout_margin="8dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tvDate" />
 
     <ImageView
         android:id="@+id/ivUSD"
         android:layout_width="100dp"
         android:layout_height="50dp"
+        android:layout_marginTop="8dp"
         android:contentDescription="@null"
         app:layout_constraintEnd_toStartOf="@id/ivGBP"
         app:layout_constraintStart_toStartOf="parent"
@@ -29,6 +51,7 @@
         android:id="@+id/ivGBP"
         android:layout_width="100dp"
         android:layout_height="50dp"
+        android:layout_marginTop="8dp"
         android:contentDescription="@null"
         app:layout_constraintEnd_toStartOf="@id/ivEUR"
         app:layout_constraintStart_toEndOf="@id/ivUSD"
@@ -38,6 +61,7 @@
         android:id="@+id/ivEUR"
         android:layout_width="100dp"
         android:layout_height="50dp"
+        android:layout_marginTop="8dp"
         android:contentDescription="@null"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@id/ivGBP"
@@ -47,6 +71,7 @@
         android:id="@+id/rvRates"
         android:layout_width="match_parent"
         android:layout_height="0dp"
+        android:layout_marginTop="8dp"
         android:gravity="center"
         android:padding="8dp"
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
@@ -61,7 +86,7 @@
         android:id="@+id/btRefresh"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="40dp"
+        android:layout_marginBottom="8dp"
         android:text="Refresh"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
