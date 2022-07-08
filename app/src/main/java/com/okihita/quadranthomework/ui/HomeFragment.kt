@@ -2,7 +2,10 @@ package com.okihita.quadranthomework.ui
 
 import android.content.pm.PackageManager
 import android.graphics.Color
+import android.graphics.ColorMatrix
+import android.graphics.ColorMatrixColorFilter
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
@@ -10,6 +13,7 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.work.WorkInfo
+import coil.load
 import com.github.mikephil.charting.components.XAxis
 import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineData
@@ -31,6 +35,9 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
     private var isWorkerRunning = false // To avoid unnecessary initial call of reloadCache()
 
     private val chartEntries: MutableList<Entry> = mutableListOf()
+    lateinit var priceIndexAdapter: PriceIndexAdapter
+
+    private var selectedCurrency = "USD"
 
     private val requiredPermissionsList = arrayOf(
         android.Manifest.permission.ACCESS_COARSE_LOCATION,
@@ -43,27 +50,11 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
         super.onViewCreated(view, savedInstanceState)
         _binding = FragmentHomeBinding.bind(view)
 
+        setupObservers()
+
         setupPriceChart()
-
-        coinDeskVM.cacheItems.observe(viewLifecycleOwner) { cachedItems ->
-            if (cachedItems.isNotEmpty()) {
-                redrawChart(cachedItems)
-                refreshText(cachedItems)
-            }
-        }
-
-        coinDeskVM.workInfo.observe(viewLifecycleOwner) {
-
-            // For PeriodicWorkRequest, State.ENQUEUED means either that the work is started for the
-            // first time, or a work is finished and another future-work is now enqueued.
-            if (it.state == WorkInfo.State.ENQUEUED) {
-                if (!isWorkerRunning) {
-                    isWorkerRunning = true
-                } else {
-                    coinDeskVM.reloadCache()
-                }
-            }
-        }
+        setupButtons()
+        setupRV()
 
         // Check for permissions
         when {
@@ -77,6 +68,77 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
 
             else -> {
                 requestPermissionLauncher.launch(requiredPermissionsList)
+            }
+        }
+
+        switchCurrency("USD")
+    }
+
+    private fun setupButtons() {
+
+        binding.apply {
+            ivUSD.load("https://countryflagsapi.com/png/us")
+            ivGBP.load("https://countryflagsapi.com/png/gb")
+            ivEUR.load("https://countryflagsapi.com/png/eu")
+        }
+
+        binding.ivUSD.setOnClickListener { switchCurrency("USD") }
+        binding.ivGBP.setOnClickListener { switchCurrency("GBP") }
+        binding.ivEUR.setOnClickListener { switchCurrency("EUR") }
+
+        binding.btRefresh.setOnClickListener {
+            coinDeskVM.reloadFromDatabase()
+        }
+    }
+
+    private fun switchCurrency(currency: String) {
+        Log.d("Xena", "switchCurrency:")
+
+        selectedCurrency = currency
+
+        val colorMatrix = ColorMatrix()
+        colorMatrix.setSaturation(0f)
+        val grayscaleFilter = ColorMatrixColorFilter(colorMatrix)
+
+        Log.d("Xena", "switchCurrency: applying filters")
+        binding.apply {
+            ivUSD.colorFilter = grayscaleFilter
+            ivGBP.colorFilter = grayscaleFilter
+            ivEUR.colorFilter = grayscaleFilter
+
+            when (currency) {
+                "USD" -> ivUSD.clearColorFilter()
+                "GBP" -> ivGBP.clearColorFilter()
+                "EUR" -> ivEUR.clearColorFilter()
+                else -> {}
+            }
+        }
+
+        coinDeskVM.refreshCacheItems()
+    }
+
+    private fun setupRV() {
+        priceIndexAdapter = PriceIndexAdapter()
+        binding.rvRates.adapter = priceIndexAdapter
+    }
+
+    private fun setupObservers() {
+        coinDeskVM.cacheItems.observe(viewLifecycleOwner) { cachedItems ->
+            if (cachedItems != null && cachedItems.isNotEmpty()) {
+                redrawChart(cachedItems)
+                refreshRV(cachedItems)
+            }
+        }
+
+        coinDeskVM.workInfo.observe(viewLifecycleOwner) {
+            // For PeriodicWorkRequest, State.ENQUEUED means either that the work is started for the
+            // first time, or a work is finished and another future-work is now enqueued.
+            if (it.state == WorkInfo.State.ENQUEUED) {
+                if (!isWorkerRunning) {
+                    isWorkerRunning = true
+                } else {
+                    coinDeskVM.reloadFromDatabase()
+                }
             }
         }
     }
@@ -93,9 +155,12 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
         }
 
     private fun redrawChart(cachedItems: List<PriceIndex>) {
+
+        chartEntries.clear()
+
         cachedItems.forEach { priceIndex ->
             val hour = priceIndex.getDateTime().hour
-            val rate = priceIndex.bpi["USD"]?.rate_float
+            val rate = priceIndex.bpi[selectedCurrency]?.rate_float
 
             chartEntries.add(Entry(hour.toFloat(), rate ?: 0f))
         }
@@ -103,8 +168,8 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
         binding.chart.apply {
 
             axisLeft.apply {
-                axisMinimum = cachedItems.minOf { it.bpi["USD"]?.rate_float ?: 0f } - 200
-                axisMaximum = cachedItems.maxOf { it.bpi["USD"]?.rate_float ?: 0f } + 200
+                axisMinimum = cachedItems.minOf { it.bpi[selectedCurrency]?.rate_float ?: 0f } - 200
+                axisMaximum = cachedItems.maxOf { it.bpi[selectedCurrency]?.rate_float ?: 0f } + 200
             }
 
             notifyDataSetChanged()
@@ -112,15 +177,9 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
         }
     }
 
-    private fun refreshText(cachedItems: List<PriceIndex>) {
-        var allItems = ""
-        cachedItems.forEach { priceIndex ->
-            val hour = priceIndex.getDateTime().hour
-            val rate = priceIndex.bpi["USD"]?.rate_float
-            allItems += "USD ${rate}, for hour ${hour}\n"
-        }
-
-        binding.tvUSD.text = allItems
+    private fun refreshRV(cachedItems: List<PriceIndex>) {
+        priceIndexAdapter.submitList(cachedItems.take(5))
+        priceIndexAdapter.selectCurrency(selectedCurrency)
     }
 
     // Set styles and generate initial data
@@ -162,7 +221,7 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
             }
         }
 
-        val dataset = LineDataSet(chartEntries, "Hourly BTC price in USD")
+        val dataset = LineDataSet(chartEntries, "Hourly BTC price")
         binding.chart.data = LineData(dataset)
     }
 

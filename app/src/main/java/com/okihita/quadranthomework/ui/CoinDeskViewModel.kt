@@ -12,6 +12,7 @@ import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import com.okihita.quadranthomework.data.entities.PriceIndex
 import com.okihita.quadranthomework.data.repository.CoinDeskRepository
+import com.okihita.quadranthomework.utils.refresh
 import com.okihita.quadranthomework.workers.PriceLocationUpdateWorker
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -29,11 +30,11 @@ class CoinDeskViewModel @Inject constructor(
     lateinit var workInfo: LiveData<WorkInfo>
 
     private val _cacheItems = MutableLiveData<List<PriceIndex>>()
-    val cacheItems = _cacheItems
+    val cacheItems: LiveData<List<PriceIndex>> = _cacheItems
 
     init {
         Log.d("Xena", "vm init: ")
-        reloadCache()
+        reloadFromDatabase()
         startPriceLocationUpdateWork()
     }
 
@@ -52,7 +53,7 @@ class CoinDeskViewModel @Inject constructor(
         workInfo = workManager.getWorkInfoByIdLiveData(fetchPriceLocationRequest.id)
     }
 
-    fun reloadCache() {
+    fun reloadFromDatabase() {
         Log.d("Xena", "reloadCache: ")
         viewModelScope.launch {
             try {
@@ -62,5 +63,9 @@ class CoinDeskViewModel @Inject constructor(
                 exception.printStackTrace()
             }
         }
+    }
+
+    fun refreshCacheItems() {
+        _cacheItems.refresh()
     }
 }
