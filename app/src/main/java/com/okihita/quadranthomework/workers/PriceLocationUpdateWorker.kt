@@ -47,8 +47,6 @@ class PriceLocationUpdateWorker @AssistedInject constructor(
 
         return try {
 
-            Log.d("Xena", "STEP 1: Fetching location from Location Provider...")
-
             locationClient = LocationServices.getFusedLocationProviderClient(applicationContext)
             val lastLocation = locationClient.lastLocation.getSuspendLocation()
             val deviceLocation = PriceIndex.DeviceLocation(
@@ -56,9 +54,6 @@ class PriceLocationUpdateWorker @AssistedInject constructor(
                 lastLocation?.longitude ?: 0.0,
                 lastLocation?.getCompleteAddressString() ?: "Address not found"
             )
-
-
-            Log.d("Xena", "STEP 2: Fetching data from API and merge with location data...")
 
             val response = repository.callCoinDeskApi()
             response.location = deviceLocation
@@ -72,23 +67,19 @@ class PriceLocationUpdateWorker @AssistedInject constructor(
             // If the database contains data from the same hour, don't save the response
             else {
                 val lastCacheDateTime = repository.getNewestPriceIndex().getISOZonedDateTime()
-                Log.d("Xena", "doWork: last cache: " + lastCacheDateTime.toDateString())
 
                 // If the response's date is the same with the date, check if it's the same hour
                 if (response.getISOZonedDateTime().dayOfYear == lastCacheDateTime.dayOfYear) {
                     if (response.getISOZonedDateTime().hour != lastCacheDateTime.hour) {
-                        Log.d("Xena", "doWork: not same hour, inserting item")
                         repository.insertPriceIndex(response)
                         showNotification(response)
                     } else {
-                        Log.d("Xena", "doWork: do nothing with data from same hour")
                         // Do nothing with the data from same hour
                     }
                 }
 
                 // If the response belongs to a new/different day
                 else {
-                    Log.d("Xena", "doWork: response from a new day compared to last item")
                     repository.insertPriceIndex(response)
                     showNotification(response)
                 }
@@ -98,7 +89,6 @@ class PriceLocationUpdateWorker @AssistedInject constructor(
 
         } catch (exception: Exception) {
             exception.printStackTrace()
-            Log.e("Xena", "doWork: failure: $exception")
             Result.failure()
         }
     }

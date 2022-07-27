@@ -34,7 +34,6 @@ class CoinDeskViewModel @Inject constructor(
     val cacheItems: LiveData<List<PriceIndex>> = _cacheItems
 
     init {
-        Log.d("Xena", "vm init: ")
         reloadTodayItemsFromDatabase()
         setupPriceLocationWork()
     }
@@ -47,7 +46,6 @@ class CoinDeskViewModel @Inject constructor(
     }
 
     fun startPriceLocationUpdateWork() {
-        Log.d("Xena", "startPriceLocationUpdateWork: ")
         workManager.enqueueUniquePeriodicWork(
             "QuadrantUpdatePriceLocation",
             ExistingPeriodicWorkPolicy.REPLACE,
@@ -56,7 +54,6 @@ class CoinDeskViewModel @Inject constructor(
     }
 
     fun reloadTodayItemsFromDatabase() {
-        Log.d("Xena", "reloadCache: ")
         viewModelScope.launch {
             try {
 
@@ -77,7 +74,6 @@ class CoinDeskViewModel @Inject constructor(
     }
 
     fun refreshCacheItems() {
-        Log.d("Xena", "refreshCacheItems: ")
         _cacheItems.refresh()
     }
 }

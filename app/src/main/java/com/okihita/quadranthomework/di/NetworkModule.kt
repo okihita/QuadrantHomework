@@ -26,7 +26,7 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideRetrofit(okHttpClient: OkHttpClient) = Retrofit.Builder()
+    fun provideRetrofit(okHttpClient: OkHttpClient): Retrofit = Retrofit.Builder()
         .client(okHttpClient)
         .baseUrl(Constants.COINDESK_BASE_URL)
         .addConverterFactory(GsonConverterFactory.create())
@@ -34,6 +34,6 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideCoinDeskApi(retrofit: Retrofit) =
+    fun provideCoinDeskApi(retrofit: Retrofit): CoinDeskApi =
         retrofit.create(CoinDeskApi::class.java)
 }

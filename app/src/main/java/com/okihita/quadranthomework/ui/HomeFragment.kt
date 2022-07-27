@@ -97,7 +97,6 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
     }
 
     private fun switchCurrency(currency: String) {
-        Log.d("Xena", "switchCurrency:")
 
         selectedCurrency = currency
 
@@ -135,7 +134,6 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
         }
 
         coinDeskVM.workInfo.observe(viewLifecycleOwner) {
-            Log.d("Xena", "setupObservers: ${it.state}")
             // For PeriodicWorkRequest, State.ENQUEUED means either that the work is started for the
             // first time, or a work is finished and another future-work is now enqueued.
             if (it.state == WorkInfo.State.ENQUEUED) {
