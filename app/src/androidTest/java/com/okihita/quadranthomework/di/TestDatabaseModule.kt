@@ -15,11 +15,12 @@ import javax.inject.Singleton
     components = [SingletonComponent::class],
     replaces = [DatabaseModule::class]
 )
-object DatabaseModuleTest {
+object TestDatabaseModule {
 
     @Singleton
     @Provides
     fun provideTestDatabase(@ApplicationContext context: Context) = Room
         .inMemoryDatabaseBuilder(context, PriceIndexDatabase::class.java)
+        .allowMainThreadQueries()
         .build()
 }

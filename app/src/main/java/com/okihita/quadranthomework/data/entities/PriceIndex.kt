@@ -45,8 +45,7 @@ data class PriceIndex(
     )
 }
 
-fun PriceIndex.getISOZonedDateTime(): ZonedDateTime {
-    val utcLocalDateTime =
-        LocalDateTime.parse(time.updatedISO, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+fun PriceIndex.getUTCZonedDateTime(): ZonedDateTime {
+    val utcLocalDateTime: LocalDateTime = LocalDateTime.parse(time.updatedISO, DateTimeFormatter.ISO_DATE_TIME)
     return utcLocalDateTime.atZone(ZoneId.of("UTC"))
 }

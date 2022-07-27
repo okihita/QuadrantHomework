@@ -5,6 +5,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.okihita.quadranthomework.data.entities.PriceIndex
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface PriceIndexDao {
@@ -13,7 +14,7 @@ interface PriceIndexDao {
     suspend fun addPriceIndex(priceIndex: PriceIndex): Long // Returns row id if success
 
     @Query("SELECT * FROM price_index")
-    suspend fun getAllPriceIndices(): List<PriceIndex>
+    fun getAllPriceIndices(): Flow<List<PriceIndex>>
 
     @Query(
         "SELECT * FROM price_index " +

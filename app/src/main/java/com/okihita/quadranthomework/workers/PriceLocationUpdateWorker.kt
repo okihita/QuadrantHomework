@@ -8,7 +8,6 @@ import android.location.Geocoder
 import android.location.Location
 import android.os.Build
 import android.os.Looper
-import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
@@ -16,11 +15,11 @@ import androidx.work.WorkerParameters
 import com.google.android.gms.location.*
 import com.google.android.gms.tasks.Task
 import com.okihita.quadranthomework.data.entities.PriceIndex
-import com.okihita.quadranthomework.data.entities.getISOZonedDateTime
+import com.okihita.quadranthomework.data.entities.getUTCZonedDateTime
 import com.okihita.quadranthomework.data.repository.CoinDeskRepository
-import com.okihita.quadranthomework.utils.toDateString
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
+import kotlinx.coroutines.flow.first
 import java.util.*
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
@@ -59,18 +58,18 @@ class PriceLocationUpdateWorker @AssistedInject constructor(
             response.location = deviceLocation
 
             // If the database is empty, save the response immediately
-            if (repository.getAllPriceIndices().isEmpty()) {
+            if (repository.getAllPriceIndices().first().isEmpty()) {
                 repository.insertPriceIndex(response)
                 showNotification(response)
             }
 
             // If the database contains data from the same hour, don't save the response
             else {
-                val lastCacheDateTime = repository.getNewestPriceIndex().getISOZonedDateTime()
+                val lastCacheDateTime = repository.getNewestPriceIndex().getUTCZonedDateTime()
 
                 // If the response's date is the same with the date, check if it's the same hour
-                if (response.getISOZonedDateTime().dayOfYear == lastCacheDateTime.dayOfYear) {
-                    if (response.getISOZonedDateTime().hour != lastCacheDateTime.hour) {
+                if (response.getUTCZonedDateTime().dayOfYear == lastCacheDateTime.dayOfYear) {
+                    if (response.getUTCZonedDateTime().hour != lastCacheDateTime.hour) {
                         repository.insertPriceIndex(response)
                         showNotification(response)
                     } else {

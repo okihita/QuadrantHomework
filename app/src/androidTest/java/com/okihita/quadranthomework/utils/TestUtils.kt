@@ -9,30 +9,29 @@ import java.time.format.DateTimeFormatter
 import kotlin.random.Random
 
 /**
- * Generate 24 instances of Price Index object, each corresponding to a certain hour
- * with some fluctuations in the rates. IMPORTANT ASSUMPTION: The device/emulator is in Jakarta.
+ * Generate 24 instances of PriceIndex object, each corresponding to a certain hour
+ * with some fluctuations in the rates. It reads the machine's local timezone.
  */
-fun generateTodayUtcPriceIndices(): List<PriceIndex> {
+fun generate24HourPriceIndices(): List<PriceIndex> {
 
     val todayPriceIndices = mutableListOf<PriceIndex>()
-    val priceIndex = Gson().fromJson(latestPriceIndexJson, PriceIndex::class.java)
-
     val localDateTime = ZonedDateTime.now(ZoneId.systemDefault())
-    println(localDateTime)
     val utcDateTime: ZonedDateTime = localDateTime.fromDeviceToUtc()
 
-    // Create 24 objects with ascending hour and fluctuating rates
     repeat(24) {
-        val thisHourDateTime = utcDateTime.with(LocalTime.of(it, Random.nextInt(59)))
-        priceIndex.bpi.forEach { currencyKeyedBpi ->
 
-            // Add a fluctuation between -100 to +100
-            val newRate = currencyKeyedBpi.value.rate_float + (Random.nextFloat() * 200 - 100)
+        val priceIndex = Gson().fromJson(latestPriceIndexJson, PriceIndex::class.java)
+
+        val thisHourDateTime = utcDateTime.with(LocalTime.of(it, Random.nextInt(59)))
+        priceIndex.time.updatedISO = thisHourDateTime.format(DateTimeFormatter.ISO_DATE_TIME)
+
+        priceIndex.bpi.forEach { currencyKeyedBpi ->
+            val newRate = currencyKeyedBpi.value.rate_float +
+                    (Random.nextFloat() * 200 - 100) // Add a fluctuation between -100 to +100
             currencyKeyedBpi.value.rate_float = newRate
             currencyKeyedBpi.value.rate = newRate.toString()
         }
 
-        priceIndex.time.updatedISO = thisHourDateTime.format(DateTimeFormatter.ISO_DATE_TIME)
         todayPriceIndices.add(priceIndex)
     }
 

@@ -4,14 +4,17 @@ import android.content.pm.PackageManager
 import android.graphics.Color
 import android.graphics.ColorMatrix
 import android.graphics.ColorMatrixColorFilter
+import android.os.Build
 import android.os.Bundle
 import android.view.View
+import android.widget.ListAdapter
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.work.WorkInfo
+import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.RecyclerView.AdapterDataObserver
 import coil.load
 import com.github.mikephil.charting.components.XAxis
 import com.github.mikephil.charting.data.Entry
@@ -19,17 +22,18 @@ import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
 import com.okihita.quadranthomework.R
 import com.okihita.quadranthomework.data.entities.PriceIndex
-import com.okihita.quadranthomework.data.entities.getISOZonedDateTime
+import com.okihita.quadranthomework.data.entities.getUTCZonedDateTime
 import com.okihita.quadranthomework.databinding.FragmentHomeBinding
 import com.okihita.quadranthomework.utils.fromDeviceToUtc
-import com.okihita.quadranthomework.utils.getCurrentDeviceZonedDateTime
+import com.okihita.quadranthomework.utils.getSystemZonedDateTime
 import com.okihita.quadranthomework.utils.toDateString
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.collectLatest
 
 @AndroidEntryPoint
 class HomeFragment : Fragment(R.layout.fragment_home) {
 
-    private val coinDeskVM by viewModels<CoinDeskViewModel>()
+    private val coinDeskVM by viewModels<MainViewModel>()
 
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
@@ -37,15 +41,22 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
     private var isWorkerRunning = false // To avoid unnecessary initial call of reloadCache()
 
     private val chartEntries: MutableList<Entry> = mutableListOf()
-    lateinit var priceIndexAdapter: PriceIndexAdapter
+    private lateinit var priceIndexAdapter: PriceIndexAdapter
 
-    private var selectedCurrency = "USD"
+    private var chosenCurrency = "USD"
 
-    private val requiredPermissionsList = arrayOf(
-        android.Manifest.permission.ACCESS_COARSE_LOCATION,
-        android.Manifest.permission.ACCESS_FINE_LOCATION,
-        android.Manifest.permission.ACCESS_BACKGROUND_LOCATION,
-    )
+    private val requiredPermissionsList = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+        arrayOf(
+            android.Manifest.permission.ACCESS_COARSE_LOCATION,
+            android.Manifest.permission.ACCESS_FINE_LOCATION,
+            android.Manifest.permission.ACCESS_BACKGROUND_LOCATION,
+        )
+    } else {
+        arrayOf(
+            android.Manifest.permission.ACCESS_COARSE_LOCATION,
+            android.Manifest.permission.ACCESS_FINE_LOCATION
+        )
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
 
@@ -54,25 +65,22 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
 
         setupObservers()
 
-        binding.tvDate.text =
-            getCurrentDeviceZonedDateTime().fromDeviceToUtc().toDateString() + " (UTC)"
-        setupPriceChart()
+        binding.tvDate.text = String.format(
+            getString(R.string.homeFragment_tv_dateLabel),
+            getSystemZonedDateTime().fromDeviceToUtc().toDateString()
+        )
+        setupChart()
         setupButtons()
         setupRV()
 
         // Check for permissions
         when {
-            // If all permissions are granted, then call start the work
+            // If all permissions are granted, then start the background work
             requiredPermissionsList.all {
                 ContextCompat.checkSelfPermission(requireContext(), it) ==
                         PackageManager.PERMISSION_GRANTED
-            } -> {
-                coinDeskVM.startPriceLocationUpdateWork()
-            }
-
-            else -> {
-                requestPermissionLauncher.launch(requiredPermissionsList)
-            }
+            } -> coinDeskVM.startPriceLocationUpdateWork()
+            else -> requestPermissionLauncher.launch(requiredPermissionsList)
         }
 
         switchCurrency("USD")
@@ -91,13 +99,13 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
         binding.ivEUR.setOnClickListener { switchCurrency("EUR") }
 
         binding.btRefresh.setOnClickListener {
-            coinDeskVM.reloadTodayItemsFromDatabase()
+            // Doing nothing because both chart and list are updated instantly when db updates
         }
     }
 
     private fun switchCurrency(currency: String) {
 
-        selectedCurrency = currency
+        chosenCurrency = currency
 
         val colorMatrix = ColorMatrix()
         colorMatrix.setSaturation(0f)
@@ -116,31 +124,30 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
             }
         }
 
-        coinDeskVM.refreshCacheItems()
+        priceIndexAdapter.selectCurrency(currency)
     }
 
     private fun setupRV() {
         priceIndexAdapter = PriceIndexAdapter()
         binding.rvRates.adapter = priceIndexAdapter
+
+        // Scroll to top whenever a new data (from the latest hour) is inserted
+        priceIndexAdapter.registerAdapterDataObserver(object : AdapterDataObserver() {
+            override fun onItemRangeInserted(positionStart: Int, itemCount: Int) {
+                binding.rvRates.scrollToPosition(positionStart)
+            }
+        })
+
+        binding.rvRates.itemAnimator = null // Disable blinking animation when content's changed
     }
 
     private fun setupObservers() {
-        coinDeskVM.cacheItems.observe(viewLifecycleOwner) { cachedItems ->
-            if (cachedItems != null && cachedItems.isNotEmpty()) {
-                redrawChart(cachedItems)
-                refreshRV(cachedItems)
-            }
-        }
 
-        coinDeskVM.workInfo.observe(viewLifecycleOwner) {
-            // For PeriodicWorkRequest, State.ENQUEUED means either that the work is started for the
-            // first time, or a work is finished and another future-work is now enqueued.
-            if (it.state == WorkInfo.State.ENQUEUED) {
-                if (!isWorkerRunning) {
-                    isWorkerRunning = true
-                } else {
-                    coinDeskVM.reloadTodayItemsFromDatabase()
-                }
+        viewLifecycleOwner.lifecycleScope.launchWhenResumed {
+            coinDeskVM.priceIndicesFlow.collectLatest { priceIndices ->
+                println("Price indices retrieved. Size: ${priceIndices.size}")
+                redrawChart(priceIndices)
+                priceIndexAdapter.submitList(priceIndices.asReversed())
             }
         }
     }
@@ -156,22 +163,22 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
             }
         }
 
-    private fun redrawChart(cachedItems: List<PriceIndex>) {
+    private fun redrawChart(priceIndices: List<PriceIndex>) {
+
+        if (priceIndices.isEmpty()) return
 
         chartEntries.clear()
 
-        cachedItems.forEach { priceIndex ->
-            val hour = priceIndex.getISOZonedDateTime().hour
-            val rate = priceIndex.bpi[selectedCurrency]?.rate_float
-
+        priceIndices.forEach { priceIndex ->
+            val hour = priceIndex.getUTCZonedDateTime().hour
+            val rate = priceIndex.bpi[chosenCurrency]?.rate_float
             chartEntries.add(Entry(hour.toFloat(), rate ?: 0f))
         }
 
         binding.chart.apply {
-
             axisLeft.apply {
-                axisMinimum = cachedItems.minOf { it.bpi[selectedCurrency]?.rate_float ?: 0f } - 200
-                axisMaximum = cachedItems.maxOf { it.bpi[selectedCurrency]?.rate_float ?: 0f } + 200
+                axisMinimum = priceIndices.minOf { it.bpi[chosenCurrency]?.rate_float ?: 0f } - 200
+                axisMaximum = priceIndices.maxOf { it.bpi[chosenCurrency]?.rate_float ?: 0f } + 200
             }
 
             notifyDataSetChanged()
@@ -179,13 +186,8 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
         }
     }
 
-    private fun refreshRV(cachedItems: List<PriceIndex>) {
-        priceIndexAdapter.submitList(cachedItems)
-        priceIndexAdapter.selectCurrency(selectedCurrency)
-    }
-
     // Set styles and generate initial data
-    private fun setupPriceChart() {
+    private fun setupChart() {
         binding.chart.apply {
 
             setBackgroundColor(Color.WHITE)

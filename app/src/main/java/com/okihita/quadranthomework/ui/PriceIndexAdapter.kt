@@ -2,26 +2,23 @@ package com.okihita.quadranthomework.ui
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.okihita.quadranthomework.data.entities.PriceIndex
-import com.okihita.quadranthomework.data.entities.getISOZonedDateTime
+import com.okihita.quadranthomework.data.entities.getUTCZonedDateTime
 import com.okihita.quadranthomework.databinding.ItemPriceIndexInfoBinding
 import com.okihita.quadranthomework.utils.fromUtcToDevice
 import com.okihita.quadranthomework.utils.toDateString
 
-class PriceIndexAdapter : RecyclerView.Adapter<PriceIndexAdapter.PriceIndexVH>() {
+class PriceIndexAdapter :
+    ListAdapter<PriceIndex, PriceIndexAdapter.PriceIndexVH>(PriceIndexDiffCallback()) {
 
-    private var priceIndices: MutableList<PriceIndex> = mutableListOf()
     private var selectedCurrency = "" // That will show in the RecyclerView
-
-    fun submitList(newItems: List<PriceIndex>) {
-        priceIndices.clear()
-        priceIndices.addAll(newItems)
-        notifyDataSetChanged()
-    }
 
     fun selectCurrency(selectedCurrency: String) {
         this.selectedCurrency = selectedCurrency
+        notifyItemRangeChanged(0, itemCount)
     }
 
     inner class PriceIndexVH(private val binding: ItemPriceIndexInfoBinding) :
@@ -29,8 +26,8 @@ class PriceIndexAdapter : RecyclerView.Adapter<PriceIndexAdapter.PriceIndexVH>()
 
         fun bind(priceIndex: PriceIndex) {
 
-            val priceIndexUtcTime = priceIndex.getISOZonedDateTime().toDateString("HH:mm")
-            val priceIndexDeviceTime = priceIndex.getISOZonedDateTime().fromUtcToDevice()
+            val priceIndexUtcTime = priceIndex.getUTCZonedDateTime().toDateString("HH:mm")
+            val priceIndexDeviceTime = priceIndex.getUTCZonedDateTime().fromUtcToDevice()
                 .toDateString("dd MMM, HH:mm")
 
             binding.apply {
@@ -54,9 +51,17 @@ class PriceIndexAdapter : RecyclerView.Adapter<PriceIndexAdapter.PriceIndexVH>()
 
     // Replace the contents of a view
     override fun onBindViewHolder(holder: PriceIndexVH, position: Int) {
-        val priceIndexItem = priceIndices[position]
+        val priceIndexItem = getItem(position)
         holder.bind(priceIndexItem)
     }
 
-    override fun getItemCount() = priceIndices.size
+    private class PriceIndexDiffCallback : DiffUtil.ItemCallback<PriceIndex>() {
+        override fun areItemsTheSame(oldItem: PriceIndex, newItem: PriceIndex): Boolean {
+            return oldItem.id == newItem.id
+        }
+
+        override fun areContentsTheSame(oldItem: PriceIndex, newItem: PriceIndex): Boolean {
+            return oldItem == newItem
+        }
+    }
 }

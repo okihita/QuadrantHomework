@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">QuadrantHomework</string>
+    <string name="homeFragment_button_refreshLabel">Refresh</string>
+    <string name="homeFragment_tv_dateLabel">%s (UTC)</string>
 </resources>
