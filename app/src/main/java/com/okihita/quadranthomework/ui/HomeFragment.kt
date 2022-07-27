@@ -38,8 +38,6 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
 
-    private var isWorkerRunning = false // To avoid unnecessary initial call of reloadCache()
-
     private val chartEntries: MutableList<Entry> = mutableListOf()
     private lateinit var priceIndexAdapter: PriceIndexAdapter
 

@@ -22,7 +22,7 @@ import javax.inject.Inject
 @HiltViewModel
 class MainViewModel @Inject constructor(
     @ApplicationContext context: Context,
-    private val repository: CoinDeskRepository
+    repository: CoinDeskRepository
 ) : ViewModel() {
 
     private val workManager = WorkManager.getInstance(context)

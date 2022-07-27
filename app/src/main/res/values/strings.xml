@@ -2,4 +2,8 @@
     <string name="app_name">QuadrantHomework</string>
     <string name="homeFragment_button_refreshLabel">Refresh</string>
     <string name="homeFragment_tv_dateLabel">%s (UTC)</string>
+    <string name="itemPriceIndex_time">TIME: %1$s (%2$s local time)</string>
+    <string name="itemPriceIndex_rate">RATE: %1$s %2$s</string>
+    <string name="itemPriceIndex_location">LOCATION: %1$f, %2$f</string>
+    <string name="itemPriceIndex_address">ADDRESS: %1$s</string>
 </resources>

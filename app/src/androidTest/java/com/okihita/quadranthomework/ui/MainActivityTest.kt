@@ -8,6 +8,7 @@ import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.filters.MediumTest
+import androidx.test.rule.GrantPermissionRule
 import androidx.work.Configuration
 import androidx.work.testing.SynchronousExecutor
 import androidx.work.testing.WorkManagerTestInitHelper
@@ -26,6 +27,13 @@ class MainActivityTest {
 
     @get:Rule
     val hiltAndroidRule = HiltAndroidRule(this)
+
+    @get:Rule
+    val grantPermissionRule: GrantPermissionRule = GrantPermissionRule.grant(
+        android.Manifest.permission.ACCESS_COARSE_LOCATION,
+        android.Manifest.permission.ACCESS_FINE_LOCATION,
+        android.Manifest.permission.ACCESS_BACKGROUND_LOCATION,
+    )
 
     @Before
     fun setup() {
