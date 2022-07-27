@@ -9,5 +9,5 @@ import com.okihita.quadranthomework.data.entities.PriceIndex
 @TypeConverters(PriceIndexMapConverter::class)
 abstract class PriceIndexDatabase : RoomDatabase() {
 
-    abstract fun priceIndexDao(): PriceIndexDao
+    abstract val priceIndexDao: PriceIndexDao
 }

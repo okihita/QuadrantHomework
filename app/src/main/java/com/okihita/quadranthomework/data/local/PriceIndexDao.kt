@@ -10,7 +10,7 @@ import com.okihita.quadranthomework.data.entities.PriceIndex
 interface PriceIndexDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun addPriceIndexResponse(priceIndex: PriceIndex): Long // Returns row id if success
+    suspend fun addPriceIndex(priceIndex: PriceIndex): Long // Returns row id if success
 
     @Query("SELECT * FROM price_index")
     suspend fun getAllPriceIndices(): List<PriceIndex>

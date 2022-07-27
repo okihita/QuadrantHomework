@@ -26,6 +26,6 @@ fun ZonedDateTime.fromUtcToDevice(): ZonedDateTime {
 }
 
 fun ZonedDateTime.fromDeviceToUtc(): ZonedDateTime {
-    // Assume that the `this` has atZone(ZoneId.systemDefault())
+    // Assume that the `this` has atZone(ZoneId.systemDefault()), which is device's timezone
     return this.withZoneSameInstant(ZoneId.of("UTC"))
 }

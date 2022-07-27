@@ -5,9 +5,9 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.SmallTest
 import com.google.common.truth.Truth.assertThat
-import com.okihita.quadranthomework.data.entities.PriceIndex
+import com.okihita.quadranthomework.utils.generateTodayUtcPriceIndices
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -23,118 +23,62 @@ class PriceIndexDaoTest {
 
     @Before
     fun setup() {
-        database = Room.inMemoryDatabaseBuilder(
-            ApplicationProvider.getApplicationContext(),
-            PriceIndexDatabase::class.java
-        )
+        database = Room
+            .inMemoryDatabaseBuilder(
+                ApplicationProvider.getApplicationContext(),
+                PriceIndexDatabase::class.java
+            )
             .allowMainThreadQueries()
             .build()
 
-        dao = database.priceIndexDao()
+        dao = database.priceIndexDao
     }
 
     @After
     fun teardown() {
+        database.clearAllTables()
         database.close()
     }
 
     @Test
-    fun insertPriceIndex() = runTest {
-        val priceIndex = PriceIndex(
-            4,
-            PriceIndex.CoinDeskTime(
-                "2022-07-08T09:09:00+00:00"
-            ),
-            mapOf(
-                Pair(
-                    "USD", PriceIndex.BitcoinPriceIndex(
-                        "USD",
-                        "&#36;",
-                        "21,379.7366",
-                        "United States Dollar",
-                        21379.7366f
-                    )
-                )
-            ),
-            null
-        )
-        dao.addPriceIndexResponse(priceIndex)
+    fun insertOnePriceIndex_loadOnePriceIndex() = runBlocking {
 
-        val allPriceIndices = dao.getAllPriceIndices()
-        assertThat(allPriceIndices).contains(priceIndex)
+        val priceIndex = generateTodayUtcPriceIndices().first()
+        dao.addPriceIndex(priceIndex)
+
+        val dbPriceIndices = dao.getAllPriceIndices()
+        assertThat(dbPriceIndices).hasSize(1)
     }
 
     @Test
-    fun clearDatabase() = runTest {
-        val priceIndex = PriceIndex(
-            1,
-            PriceIndex.CoinDeskTime(
-                "2022-07-08T09:09:00+00:00"
-            ),
-            mapOf(
-                Pair(
-                    "USD", PriceIndex.BitcoinPriceIndex(
-                        "USD",
-                        "&#36;",
-                        "21,379.7366",
-                        "United States Dollar",
-                        21379.7366f
-                    )
-                )
-            ),
-            null
-        )
-        dao.addPriceIndexResponse(priceIndex)
-        dao.addPriceIndexResponse(priceIndex)
+    fun insert24PriceIndices_allUniqueHours_load24PriceIndices() = runBlocking {
+
+        val priceIndices = generateTodayUtcPriceIndices().shuffled()
+        priceIndices.forEach { dao.addPriceIndex(it) }
+
+        val dbPriceIndices = dao.getAllPriceIndices()
+        assertThat(dbPriceIndices).hasSize(24)
+    }
+
+    @Test
+    fun databaseCleared_zeroItemReturned() = runBlocking {
+
+        val priceIndices = generateTodayUtcPriceIndices().shuffled()
+        priceIndices.forEach { dao.addPriceIndex(it) }
+
         dao.deleteAll()
 
         val allPriceIndices = dao.getAllPriceIndices()
-        assertThat(allPriceIndices).doesNotContain(priceIndex)
+        assertThat(allPriceIndices).isEmpty()
     }
 
     @Test
-    fun getNewestItem() = runTest {
+    fun fewItemsAdded_newestItemIsTheLast() = runBlocking {
 
-        val bip = mapOf(
-            Pair(
-                "USD", PriceIndex.BitcoinPriceIndex(
-                    "USD", "&#36;", "21,379.7366", "United States Dollar", 21379.7366f
-                )
-            )
-        )
-
-        val priceIndex1 = PriceIndex(
-            1,
-            PriceIndex.CoinDeskTime(
-                "2022-07-08T09:09:00+00:00"
-            ),
-            bip,
-            null
-        )
-
-        val priceIndex2 = PriceIndex(
-            2,
-            PriceIndex.CoinDeskTime(
-                "2022-07-08T09:09:00+00:00"
-            ),
-            bip,
-            null
-        )
-
-        val priceIndex3 = PriceIndex(
-            3,
-            PriceIndex.CoinDeskTime(
-                "2022-07-08T09:09:00+00:00"
-            ),
-            bip,
-            null
-        )
-
-        dao.addPriceIndexResponse(priceIndex2)
-        dao.addPriceIndexResponse(priceIndex3)
-        dao.addPriceIndexResponse(priceIndex1)
+        val priceIndices = generateTodayUtcPriceIndices().shuffled()
+        priceIndices.forEach { dao.addPriceIndex(it) }
 
         val newestPriceIndex = dao.getNewestPriceIndex()
-        assertThat(newestPriceIndex).isEqualTo(priceIndex3)
+        assertThat(newestPriceIndex.time.updatedISO).isEqualTo(priceIndices.last().time.updatedISO)
     }
 }

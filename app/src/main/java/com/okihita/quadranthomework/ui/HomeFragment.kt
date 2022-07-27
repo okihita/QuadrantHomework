@@ -5,7 +5,6 @@ import android.graphics.Color
 import android.graphics.ColorMatrix
 import android.graphics.ColorMatrixColorFilter
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
@@ -181,7 +180,7 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
     }
 
     private fun refreshRV(cachedItems: List<PriceIndex>) {
-        priceIndexAdapter.submitList(cachedItems.take(5))
+        priceIndexAdapter.submitList(cachedItems)
         priceIndexAdapter.selectCurrency(selectedCurrency)
     }
 

@@ -13,9 +13,6 @@ import java.time.format.DateTimeFormatter
 @Entity(tableName = "price_index")
 data class PriceIndex(
 
-    @PrimaryKey(autoGenerate = true)
-    val id: Int,
-
     @Embedded
     val time: CoinDeskTime,
 
@@ -26,17 +23,19 @@ data class PriceIndex(
     var location: DeviceLocation?
 
 ) {
+    @PrimaryKey(autoGenerate = true)
+    var id: Long = 0
 
     data class CoinDeskTime(
-        val updatedISO: String,
+        var updatedISO: String,
     )
 
     data class BitcoinPriceIndex(
         val code: String,
         val symbol: String,
-        val rate: String,
+        var rate: String,
         val description: String,
-        val rate_float: Float
+        var rate_float: Float
     )
 
     data class DeviceLocation(

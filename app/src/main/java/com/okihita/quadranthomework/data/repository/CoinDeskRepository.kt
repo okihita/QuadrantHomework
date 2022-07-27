@@ -14,11 +14,11 @@ class CoinDeskRepository @Inject constructor(
         api.getCurrentPrice()
 
     suspend fun insertPriceIndex(priceIndex: PriceIndex) =
-        database.priceIndexDao().addPriceIndexResponse(priceIndex)
+        database.priceIndexDao.addPriceIndex(priceIndex)
 
     suspend fun getAllPriceIndices() =
-        database.priceIndexDao().getAllPriceIndices()
+        database.priceIndexDao.getAllPriceIndices()
 
     suspend fun getNewestPriceIndex() =
-        database.priceIndexDao().getNewestPriceIndex()
+        database.priceIndexDao.getNewestPriceIndex()
 }
