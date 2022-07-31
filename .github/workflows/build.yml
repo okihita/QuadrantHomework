@@ -40,7 +40,7 @@ jobs:
 
   save_debug_apk:
     name: Upload Debug APK to GitHub Artifact
-    needs: [unit_tests, android_tests] # Wait until jobs unit_tests and android_tests finish
+    needs: [ unit_tests, android_tests ] # Wait until jobs unit_tests and android_tests finish
     runs-on: ubuntu-latest
 
     steps:
@@ -55,8 +55,21 @@ jobs:
       - name: Build Debug APK
         run: ./gradlew assembleDebug
 
-      - name: Upload APK
+      - name: Upload Debug APK to GitHub Artifact
         uses: actions/upload-artifact@v3
         with:
           name: QuadrantHomework-${{ steps.date.outputs.date }}.apk
           path: app/build/outputs/apk/debug/app-debug.apk
+
+      - name: Download Artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: QuadrantHomework-${{ steps.date.outputs.date }}.apk
+
+      - name: Upload Artifact to Firebase App Distribution
+        uses: wzieba/Firebase-Distribution-Github-Action@v1
+        with:
+          appId: ${{ secrets.FIREBASE_APP_ID_ANDROID }}
+          token: ${{ secrets.FIREBASE_TOKEN }}
+          groups: homework-testers
+          file: QuadrantHomework-${{ steps.date.outputs.date }}.apk
