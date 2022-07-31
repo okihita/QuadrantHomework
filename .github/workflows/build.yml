@@ -47,7 +47,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Build APK
+      - name: Make Gradle executable
+        run: chmod +x ./gradlew
+
+      - name: Build with Gradle
+        run: ./gradlew build
+
+      - name: Build Debug APK
         uses: ./gradlew clean assembleDebug
 
 #      - name: Upload APK
