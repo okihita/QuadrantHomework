@@ -13,6 +13,7 @@ import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.tasks.Task
+import com.okihita.quadranthomework.R
 import com.okihita.quadranthomework.data.entities.PriceIndex
 import com.okihita.quadranthomework.data.entities.getUTCZonedDateTime
 import com.okihita.quadranthomework.data.repository.CoinDeskRepository
@@ -136,7 +137,7 @@ class PriceLocationUpdateWorker @AssistedInject constructor(
         }
 
         val notification = NotificationCompat.Builder(applicationContext, channelId)
-            .setSmallIcon(com.google.android.material.R.drawable.ic_mtrl_checked_circle)
+            .setSmallIcon(R.drawable.ic_update)
             .setContentTitle("Price Updated!")
             .setContentText("1 BTC is now USD ${response.bpi["USD"]?.rate_float}, from location ${response.location?.address}")
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)

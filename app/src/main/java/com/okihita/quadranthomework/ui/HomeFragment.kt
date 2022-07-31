@@ -7,7 +7,6 @@ import android.graphics.ColorMatrixColorFilter
 import android.os.Build
 import android.os.Bundle
 import android.view.View
-import android.widget.ListAdapter
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
@@ -75,8 +74,10 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
         when {
             // If all permissions are granted, then start the background work
             requiredPermissionsList.all {
-                ContextCompat.checkSelfPermission(requireContext(), it) ==
-                        PackageManager.PERMISSION_GRANTED
+                ContextCompat.checkSelfPermission(
+                    requireContext(),
+                    it
+                ) == PackageManager.PERMISSION_GRANTED
             } -> coinDeskVM.startPriceLocationUpdateWork()
             else -> requestPermissionLauncher.launch(requiredPermissionsList)
         }
