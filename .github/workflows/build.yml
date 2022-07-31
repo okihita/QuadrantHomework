@@ -39,7 +39,7 @@ jobs:
 
   build_apk:
     name: Generate APK
-    needs: [unit_test, android_tests] # Wait until jobs unit_tests and android_tests finishes
+    needs: [unit_tests, android_tests] # Wait until jobs unit_tests and android_tests finishes
     runs-on: ubuntu-latest
 
     steps:
