@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.filters.RequiresDevice
 import androidx.test.rule.GrantPermissionRule
 import androidx.work.ListenableWorker
 import androidx.work.WorkerFactory
@@ -68,6 +69,7 @@ class PriceLocationUpdateWorkerTest {
     }
 
     @Test
+    @RequiresDevice
     fun workStarted_defaultDependencies_resultSuccessDatabasePopulated() {
 
         runBlocking {
@@ -85,6 +87,7 @@ class PriceLocationUpdateWorkerTest {
     }
 
     @Test
+    @RequiresDevice
     fun workStarted_mockedApiResponse_resultSuccessDatabasePopulatedEqualItems() {
 
         val mockedApi: CoinDeskApi = mock()
