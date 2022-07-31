@@ -4,6 +4,8 @@ plugins {
 
     id 'kotlin-kapt'
     id 'dagger.hilt.android.plugin'
+
+    id 'com.google.gms.google-services'
 }
 
 android {
@@ -127,4 +129,8 @@ dependencies {
     testImplementation "org.mockito.kotlin:mockito-kotlin:4.0.0"
     androidTestImplementation "org.mockito:mockito-android:4.6.1"
     androidTestImplementation "org.mockito.kotlin:mockito-kotlin:4.0.0"
+
+    // Firebase App Distribution
+    implementation platform('com.google.firebase:firebase-bom:30.3.1')
+    implementation 'com.google.firebase:firebase-analytics'
 }

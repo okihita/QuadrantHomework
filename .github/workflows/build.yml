@@ -38,12 +38,17 @@ jobs:
           api-level: 29
           script: ./gradlew connectedAndroidTest
 
-  build_apk:
-    name: Generate APK
-    needs: [unit_tests, android_tests] # Wait until jobs unit_tests and android_tests finishes
+  save_debug_apk:
+    name: Upload Debug APK to GitHub Artifact
+    needs: [unit_tests, android_tests] # Wait until jobs unit_tests and android_tests finish
     runs-on: ubuntu-latest
 
     steps:
+
+      - name: Get Current DateTime
+        id: date
+        run: echo "::set-output name=date::$(date +'%Y-%m-%d_%H-%M')"
+
       - name: Checkout
         uses: actions/checkout@v3
 
@@ -53,5 +58,5 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v3
         with:
-          name: QuadrantHomework.apk
+          name: QuadrantHomework-${{ steps.date.outputs.date }}.apk
           path: app/build/outputs/apk/debug/app-debug.apk

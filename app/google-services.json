@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "167787192624",
+    "project_id": "quadranthomework",
+    "storage_bucket": "quadranthomework.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:167787192624:android:8aa0a06fd31d8a87fae8f5",
+        "android_client_info": {
+          "package_name": "com.okihita.quadranthomework"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "167787192624-5998t9ag4355dkiusrqpk10j541svtc4.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDIG99jUB_w3RvSskiOANhxeNhxi7iL2xY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "167787192624-5998t9ag4355dkiusrqpk10j541svtc4.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
